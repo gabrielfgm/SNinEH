@@ -1,0 +1,268 @@
+---
+title: "Reproduction Materials"
+author: "Gabriel Geisler Mesevage"
+date: "25/02/2019"
+output: 
+  md_document:
+    variant: markdown_github
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Materials for Reproduction
+
+This repository contains the data and code to reproduce the tables and figures in 
+Rui Esteves and Gabriel Geisler Mesevage, "Social 
+Networks in Economic History: Opportunities and Challenges." 
+This document is designed to be self-contained. Researchers can clone this
+repository and open the `.Rmd` file to follow the production of the tables and 
+figures interactively. Alternatively, the file `scotland_eda.R` is a stand-alone
+file with R-code that produces each figure and table contained in the paper.
+
+In the sections below, we include a more interactive code through for the production
+of the tables and figures. 
+
+### Loading the data and network summary statistics
+
+
+```{r load_data}
+library(Hmisc)
+library(igraph)
+
+sc <- mdb.get("data/Scotland.mdb")
+
+# Break database into constituent dataframes
+list2env(sc, envir = globalenv())
+
+# we create a company-by-director matrix
+c_d <- as.matrix(table(Affiliations$CompId, Affiliations$DirId))
+
+# The matrix product yields a company by company adjacency matrix
+c_c <- c_d %*% t(c_d)
+
+# we create an igraph object from the adjacency matrix,
+# the graph is undirected and without self-loops
+cg <- graph_from_adjacency_matrix(c_c, mode = 'directed', diag = F)
+
+# Read in company attribute data
+imm <- readxl::read_xlsx("data/data_imm.xlsx")
+
+# First add in unconnected nodes
+cons <- get.edgelist(cg)
+cg <- graph_from_data_frame(cons, directed = FALSE, vertices = imm$compid)
+cg <- simplify(cg)
+
+# Now extract adjacency matrix
+adjmat <- get.adjacency(cg, sparse = F)
+
+# Now do eigen cent first
+imm$eig_cent <- eigen_centrality(cg)$vector
+imm$degree <- degree(cg)
+imm$betweenness <- betweenness(cg)
+
+#########################
+# Network Summary Stats #
+#########################
+
+# density
+edge_density(cg)
+
+# diameter
+diameter(cg)
+
+# shortest paths
+dmat <- shortest.paths(cg) # unreachable nodes are Inf
+dmat <- dmat[lower.tri(dmat)]
+dmat <- dmat[is.finite(dmat)]
+
+# Mean shortest path
+mean(dmat)
+# Shortest path standard deviation
+sd(dmat)
+# Max shortest path (same as diameter)
+max(dmat)
+
+# Degrees
+degrees <- degree(cg)
+# Mean degree
+mean(degrees)
+
+degree.df <- data.frame(degree = degrees, names = V(cg)$name)
+
+degree.df %>% group_by(degree) %>% summarise(N = n(), Freq. = N/nrow(degree.df)) %>%
+  ungroup() %>% mutate(`Percent Cum.` = cumsum(Freq.)*100)
+
+# Top ten comps by degree
+degree.df %>% arrange(-degree) %>% head(10L)
+
+degree.df %>% mutate(upper.20 = degree >= quantile(degree, .8),
+                     lower.20 = degree <= quantile(degree, .2)) %>%
+  summarise(`Perc. Upper Quantile` = sum(degree[upper.20]/sum(degree)),
+            `Perc. Lower Quantile` = sum(degree[lower.20]/sum(degree)))
+
+
+```
+
+The above summary statistics underpin the discussion of common empirical network characteristics
+as discussed in section 2 of the paper. We can also visualize and inspect the network.
+
+### Visualizing the network
+
+```{r net_figure}
+
+###########################
+# Visualizing the Network #
+###########################
+# Set attributes
+vid <- V(cg)$name
+V(cg)$name <- as.character(Company$Company[as.character(Company$CompId) %in% vid])
+V(cg)$ind <- Company$IndID[as.character(Company$CompId) %in% vid]
+V(cg)$cap <- as.numeric(Company$Capital[as.character(Company$CompId) %in% vid])
+V(cg)$prof <- as.numeric(imm$avg_div[as.character(imm$compid) %in% vid])
+
+library(GGally)
+library(intergraph)
+library(RColorBrewer)
+
+# use industrial categories
+indcat <- data.frame(IndID = V(cg)$ind)
+indcat <- left_join(indcat, Industry)
+
+cat_cat <- c("Mining", "Heavy Man.", "Railways", "Energy", "Light Man.", "Banking", "Insurance", "Inv. Trusts and Property")
+indcat$IndCat <- factor(indcat$IndCat)
+levels(indcat$IndCat) <- cat_cat
+
+V(cg)$indcat <- as.character(indcat$IndCat)
+
+ggnet2(simplify(cg), mode = 'fruchtermanreingold', layout.exp = .3,
+       size = "prof", size.legend = "Average Dividend Yield (%)", size.cut = 5, max_size = 10,
+       color = "indcat", 
+       fill = "indcat",
+       palette = "Greys", 
+       color.legend = "Industry Category", 
+       na.rm = "prof"
+       ) +
+  geom_point(aes(size = size), shape = 21, color = "black") + 
+  guides(color = guide_legend(override.aes = 
+                                list(shape=21, 
+                                     size=10, 
+                                     fill=brewer.pal(8, "Greys"), 
+                                     color = "black")))
+
+```
+
+### Estimating network regressions
+
+To estimate the regressions we use the packages `spdep` and `sphet` which were written for spatial econometrics, 
+and we output the results using the package `texreg`. In this example we output the
+tables to html. In the paper they are output to latex, and we edit them slightly
+(removing the fixed effects) in order to truncate them for publication.
+
+```{r table_2, results = "asis"}
+##################################
+# Estimations of Network effects #
+##################################
+
+library(sphet)
+library(spdep)
+library(texreg)
+
+###################################################
+# Comparing centrality measures vs autoregression #
+###################################################
+
+source("extract_helper_functions.R")
+
+# we build a helper function to cope with missing observations
+# when running network econometric models
+run_regs <- function(formula, depvar, type = "stsls", adjmat) {
+
+  # get data
+  dat <- na.omit(imm[, all.vars(formula)])
+  
+  # get indices of full obs
+  ind <- rowSums(is.na(imm[, all.vars(formula)])) == 0
+  
+  # build weight matrix
+  W <- mat2listw(adjmat[ind, ind], style = "W")
+  
+  if (type == "stsls") {
+    sts <- stsls(formula, data = dat, listw = W, zero.policy = TRUE)
+    sts$rsquared <- 1 - sts$sse/(nrow(dat) * var(dat[, all.vars(formula)[1]]))
+  } else if (type == "gstsls") {
+    sts <- gstslshet(formula, data = dat, listw = W, zero.policy = TRUE)
+  } else if (type == "sacsarlm") {
+    sts <- sacsarlm(formula, data = dat, listw = W, Durbin = TRUE, zero.policy = TRUE)
+  } else if (type == "lagsarlm") {
+    sts <- lagsarlm(formula, data = dat, listw = W, Durbin = TRUE, zero.policy = TRUE)
+  } else {
+    cat("Unknown regression type!")
+  }
+  
+  sts
+}
+
+# Create industry dummies
+imm$railways <- as.numeric(imm$indid == 5)
+imm$insurance <- as.numeric(imm$indid == 23)
+imm$investment <- as.numeric(imm$indid == 24)
+imm$banking <- as.numeric(imm$indid == 22)
+
+lm2 <- lm(avg_div ~ degree + betweenness + eig_cent + capital + qualifications  + uncalled, data = imm)
+sts2 <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div, type = "stsls", adjmat = adjmat)
+gsts2 <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div, type = "gstsls", adjmat = adjmat)
+sacsarlm2 <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div, type = "sacsarlm", adjmat = adjmat)
+lm3 <- lm(avg_div ~ degree + betweenness + eig_cent + capital + qualifications + uncalled + railways + insurance + investment + banking, 
+               data = imm[!is.na(imm$avg_div), ])
+sts3 <- run_regs(avg_div ~ capital + qualifications  + uncalled + 
+                   railways + insurance + investment + banking, imm$avg_div, type = "stsls", adjmat = adjmat)
+gsts3 <- run_regs(avg_div ~ capital + qualifications  + uncalled + 
+                    railways + insurance + investment + banking, imm$avg_div, type = "gstsls", adjmat = adjmat)
+sacsarlm3 <- run_regs(avg_div ~ capital + qualifications  + uncalled + 
+                        railways + insurance + investment + banking, imm$avg_div, type = "sacsarlm", adjmat = adjmat)
+
+
+htmlreg(list(lm2, extract.stsls(sts2), extract.gstslshet(gsts2), sacsarlm2,
+            lm3, extract.stsls(sts3), extract.gstslshet(gsts3), sacsarlm3), 
+       custom.model.names = c("OLS", "STSLS", "GSTSLS", "SAC/SARAR", "OLS", "STSLS", "GSTSLS", "SAC/SARAR"))
+
+```
+
+Finally, we reproduce the results of Table 3 by creating a mis-measured network
+which fails to encode connections between companies and banks and re-estimating
+the regressions.
+
+```{r table_3, results = "asis"}
+#######################################################
+# Estimations of Network effects w/ Measurement Error #
+#######################################################
+
+cg2 <- cg %>% delete.edges(E(cg)[from(V(cg)[V(cg)$indcat=="Banking"])])
+
+# Now extract adjacency matrix
+adjmat_nb <- get.adjacency(cg2, sparse = F)
+
+# Now do eigen cent first
+#imm <- imm[imm$compid %in% names(V(cg)),]
+imm$eig_cent_nb <- eigen_centrality(cg2)$vector
+imm$degree_nb <- degree(cg2)
+imm$betweenness_nb <- betweenness(cg2)
+
+########################################################################
+# Comparing centrality measures vs autoregression w/ Measurement Error #
+########################################################################
+
+# Make wide table
+lm2_nb <- lm(avg_div ~ degree_nb + betweenness_nb + eig_cent_nb + capital + qualifications  + uncalled, data = imm)
+sts2_nb <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div, type = "stsls", adjmat = adjmat_nb)
+gsts2_nb <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div, type = "gstsls", adjmat = adjmat_nb)
+sacsarlm2_nb <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div, type = "sacsarlm", adjmat = adjmat_nb)
+
+htmlreg(list(lm2_nb, extract.stsls(sts2_nb), extract.gstslshet(gsts2_nb), sacsarlm2_nb), 
+       custom.model.names = c("OLS", "STSLS", "GSTSLS", "SAC/SARAR"))
+
+
+
+```
