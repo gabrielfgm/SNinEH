@@ -29,6 +29,7 @@ of the tables and figures.
 
 ```{r load_data}
 library(Hmisc)
+library(tidyverse)
 library(igraph)
 
 sc <- mdb.get("data/Scotland.mdb")
