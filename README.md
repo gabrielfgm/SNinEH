@@ -17,72 +17,9 @@ the production of the tables and figures.
 
 ``` r
 library(Hmisc)
-```
-
-    ## Loading required package: lattice
-
-    ## Loading required package: survival
-
-    ## Loading required package: Formula
-
-    ## Loading required package: ggplot2
-
-    ## 
-    ## Attaching package: 'Hmisc'
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     format.pval, units
-
-``` r
 library(tidyverse)
-```
-
-    ## ── Attaching packages ───────────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──
-
-    ## ✔ tibble  2.0.0     ✔ purrr   0.2.5
-    ## ✔ tidyr   0.8.2     ✔ dplyr   0.7.8
-    ## ✔ readr   1.1.1     ✔ stringr 1.3.1
-    ## ✔ tibble  2.0.0     ✔ forcats 0.3.0
-
-    ## ── Conflicts ──────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
-    ## ✖ dplyr::filter()    masks stats::filter()
-    ## ✖ dplyr::lag()       masks stats::lag()
-    ## ✖ dplyr::src()       masks Hmisc::src()
-    ## ✖ dplyr::summarize() masks Hmisc::summarize()
-
-``` r
 library(igraph)
-```
 
-    ## 
-    ## Attaching package: 'igraph'
-
-    ## The following objects are masked from 'package:dplyr':
-    ## 
-    ##     as_data_frame, groups, union
-
-    ## The following objects are masked from 'package:purrr':
-    ## 
-    ##     compose, simplify
-
-    ## The following object is masked from 'package:tidyr':
-    ## 
-    ##     crossing
-
-    ## The following object is masked from 'package:tibble':
-    ## 
-    ##     as_data_frame
-
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     decompose, spectrum
-
-    ## The following object is masked from 'package:base':
-    ## 
-    ##     union
-
-``` r
 sc <- mdb.get("data/Scotland.mdb")
 
 # Break database into constituent dataframes
@@ -244,27 +181,13 @@ V(cg)$cap <- as.numeric(Company$Capital[as.character(Company$CompId) %in% vid])
 V(cg)$prof <- as.numeric(imm$avg_div[as.character(imm$compid) %in% vid])
 
 library(GGally)
-```
-
-    ## 
-    ## Attaching package: 'GGally'
-
-    ## The following object is masked from 'package:dplyr':
-    ## 
-    ##     nasa
-
-``` r
 library(intergraph)
 library(RColorBrewer)
 
 # use industrial categories
 indcat <- data.frame(IndID = V(cg)$ind)
 indcat <- left_join(indcat, Industry)
-```
 
-    ## Joining, by = "IndID"
-
-``` r
 cat_cat <- c("Mining", "Heavy Man.", "Railways", "Energy", "Light Man.", "Banking", "Insurance", "Inv. Trusts and Property")
 indcat$IndCat <- factor(indcat$IndCat)
 levels(indcat$IndCat) <- cat_cat
@@ -287,8 +210,6 @@ ggnet2(simplify(cg), mode = 'fruchtermanreingold', layout.exp = .3,
                                      color = "black")))
 ```
 
-    ## na.rm removed 13 nodes out of 108
-
 ![](README_files/figure-markdown_github/net_figure-1.png)
 
 ### Estimating network regressions
@@ -306,43 +227,8 @@ html. In the paper they are output to latex, and we edit them slightly
 
 library(sphet)
 library(spdep)
-```
-
-    ## Loading required package: sp
-
-    ## Loading required package: Matrix
-
-    ## 
-    ## Attaching package: 'Matrix'
-
-    ## The following object is masked from 'package:tidyr':
-    ## 
-    ##     expand
-
-    ## Loading required package: spData
-
-    ## To access larger datasets in this package, install the spDataLarge
-    ## package with: `install.packages('spDataLarge',
-    ## repos='https://nowosad.github.io/drat/', type='source'))`
-
-``` r
 library(texreg)
-```
 
-    ## Version:  1.36.23
-    ## Date:     2017-03-03
-    ## Author:   Philip Leifeld (University of Glasgow)
-    ## 
-    ## Please cite the JSS article in your publications -- see citation("texreg").
-
-    ## 
-    ## Attaching package: 'texreg'
-
-    ## The following object is masked from 'package:tidyr':
-    ## 
-    ##     extract
-
-``` r
 ###################################################
 # Comparing centrality measures vs autoregression #
 ###################################################
@@ -386,52 +272,18 @@ imm$banking <- as.numeric(imm$indid == 22)
 
 lm2 <- lm(avg_div ~ degree + betweenness + eig_cent + capital + qualifications  + uncalled, data = imm)
 sts2 <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div, type = "stsls", adjmat = adjmat)
-```
-
-    ## Warning in nb2listw(res$neighbours, glist = res$weights, style = style, :
-    ## zero sum general weights
-
-``` r
 gsts2 <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div, type = "gstsls", adjmat = adjmat)
-```
-
-    ## Warning in nb2listw(res$neighbours, glist = res$weights, style = style, :
-    ## zero sum general weights
-
-``` r
 sacsarlm2 <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div, type = "sacsarlm", adjmat = adjmat)
-```
-
-    ## Warning in nb2listw(res$neighbours, glist = res$weights, style = style, :
-    ## zero sum general weights
-
-``` r
 lm3 <- lm(avg_div ~ degree + betweenness + eig_cent + capital + qualifications + uncalled + railways + insurance + investment + banking, 
                data = imm[!is.na(imm$avg_div), ])
 sts3 <- run_regs(avg_div ~ capital + qualifications  + uncalled + 
                    railways + insurance + investment + banking, imm$avg_div, type = "stsls", adjmat = adjmat)
-```
-
-    ## Warning in nb2listw(res$neighbours, glist = res$weights, style = style, :
-    ## zero sum general weights
-
-``` r
 gsts3 <- run_regs(avg_div ~ capital + qualifications  + uncalled + 
                     railways + insurance + investment + banking, imm$avg_div, type = "gstsls", adjmat = adjmat)
-```
-
-    ## Warning in nb2listw(res$neighbours, glist = res$weights, style = style, :
-    ## zero sum general weights
-
-``` r
 sacsarlm3 <- run_regs(avg_div ~ capital + qualifications  + uncalled + 
                         railways + insurance + investment + banking, imm$avg_div, type = "sacsarlm", adjmat = adjmat)
-```
 
-    ## Warning in nb2listw(res$neighbours, glist = res$weights, style = style, :
-    ## zero sum general weights
 
-``` r
 htmlreg(list(lm2, extract.stsls(sts2), extract.gstslshet(gsts2), sacsarlm2,
             lm3, extract.stsls(sts3), extract.gstslshet(gsts3), sacsarlm3), 
        custom.model.names = c("OLS", "STSLS", "GSTSLS", "SAC/SARAR", "OLS", "STSLS", "GSTSLS", "SAC/SARAR"))
@@ -1757,26 +1609,9 @@ imm$betweenness_nb <- betweenness(cg2)
 # Make wide table
 lm2_nb <- lm(avg_div ~ degree_nb + betweenness_nb + eig_cent_nb + capital + qualifications  + uncalled, data = imm)
 sts2_nb <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div, type = "stsls", adjmat = adjmat_nb)
-```
-
-    ## Warning in nb2listw(res$neighbours, glist = res$weights, style = style, :
-    ## zero sum general weights
-
-``` r
 gsts2_nb <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div, type = "gstsls", adjmat = adjmat_nb)
-```
-
-    ## Warning in nb2listw(res$neighbours, glist = res$weights, style = style, :
-    ## zero sum general weights
-
-``` r
 sacsarlm2_nb <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div, type = "sacsarlm", adjmat = adjmat_nb)
-```
 
-    ## Warning in nb2listw(res$neighbours, glist = res$weights, style = style, :
-    ## zero sum general weights
-
-``` r
 htmlreg(list(lm2_nb, extract.stsls(sts2_nb), extract.gstslshet(gsts2_nb), sacsarlm2_nb), 
        custom.model.names = c("OLS", "STSLS", "GSTSLS", "SAC/SARAR"))
 ```
