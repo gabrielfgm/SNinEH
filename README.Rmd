@@ -160,10 +160,10 @@ ggnet2(simplify(cg), mode = 'fruchtermanreingold', layout.exp = .3,
 
 To estimate the regressions we use the packages `spdep` and `sphet` which were written for spatial econometrics, 
 and we output the results using the package `texreg`. In this example we output the
-tables to html. In the paper they are output to latex, and we edit them slightly
+tables to text. In the paper they are output to latex, and we edit them slightly
 (removing the fixed effects) in order to truncate them for publication.
 
-```{r table_2, results = "asis"}
+```{r table_2}
 ##################################
 # Estimations of Network effects #
 ##################################
@@ -227,7 +227,7 @@ sacsarlm3 <- run_regs(avg_div ~ capital + qualifications  + uncalled +
                         railways + insurance + investment + banking, imm$avg_div, type = "sacsarlm", adjmat = adjmat)
 
 
-htmlreg(list(lm2, extract.stsls(sts2), extract.gstslshet(gsts2), sacsarlm2,
+screenreg(list(lm2, extract.stsls(sts2), extract.gstslshet(gsts2), sacsarlm2,
             lm3, extract.stsls(sts3), extract.gstslshet(gsts3), sacsarlm3), 
        custom.model.names = c("OLS", "STSLS", "GSTSLS", "SAC/SARAR", "OLS", "STSLS", "GSTSLS", "SAC/SARAR"))
 
@@ -237,7 +237,7 @@ Finally, we reproduce the results of Table 3 by creating a mis-measured network
 which fails to encode connections between companies and banks and re-estimating
 the regressions.
 
-```{r table_3, results = "asis"}
+```{r table_3}
 #######################################################
 # Estimations of Network effects w/ Measurement Error #
 #######################################################
@@ -263,7 +263,7 @@ sts2_nb <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div,
 gsts2_nb <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div, type = "gstsls", adjmat = adjmat_nb)
 sacsarlm2_nb <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div, type = "sacsarlm", adjmat = adjmat_nb)
 
-htmlreg(list(lm2_nb, extract.stsls(sts2_nb), extract.gstslshet(gsts2_nb), sacsarlm2_nb), 
+screenreg(list(lm2_nb, extract.stsls(sts2_nb), extract.gstslshet(gsts2_nb), sacsarlm2_nb), 
        custom.model.names = c("OLS", "STSLS", "GSTSLS", "SAC/SARAR"))
 
 
