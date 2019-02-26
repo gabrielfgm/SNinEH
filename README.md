@@ -188,7 +188,8 @@ library(RColorBrewer)
 indcat <- data.frame(IndID = V(cg)$ind)
 indcat <- left_join(indcat, Industry)
 
-cat_cat <- c("Mining", "Heavy Man.", "Railways", "Energy", "Light Man.", "Banking", "Insurance", "Inv. Trusts and Property")
+cat_cat <- c("Mining", "Heavy Man.", "Railways", "Energy", "Light Man.", 
+             "Banking", "Insurance", "Inv. Trusts and Property")
 indcat$IndCat <- factor(indcat$IndCat)
 levels(indcat$IndCat) <- cat_cat
 
