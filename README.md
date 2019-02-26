@@ -175,7 +175,7 @@ The above summary statistics underpin the discussion of common empirical
 network characteristics as discussed in section 2 of the paper. We can
 also visualize and inspect the network.
 
-### Visualizing the network
+### Reproducing Figure 1: Visualizing the network
 
 We visualize the network using the network by mapping the industrial
 category of each company to greyscale, and the size of each node is
@@ -219,7 +219,7 @@ ggnet2(simplify(cg), mode = 'fruchtermanreingold', layout.exp = .3,
 
 ![](README_files/figure-markdown_github/net_figure-1.png)
 
-### Estimating network regressions
+### Reproducing Table 2: Estimating network regressions
 
 To estimate the regressions we use the packages `spdep` and `sphet`
 which were written for spatial econometrics, and we output the results
@@ -243,7 +243,7 @@ library(texreg)
 # we load an external file that contains functions that extract
 # coefficients and other information from regression models to be 
 # printed via the texreg function
-source("extract_helper_functions.R")
+source("R/extract_helper_functions.R")
 
 # we build a helper function to cope with missing observations
 # when running network econometric models
@@ -353,6 +353,8 @@ screenreg(list(lm2, extract.stsls(sts2), extract.gstslshet(gsts2), sacsarlm2,
     ## Log Likelihood                                       -284.64                                       -270.81    
     ## ==============================================================================================================
     ## *** p < 0.001, ** p < 0.01, * p < 0.05
+
+### Reproducing Table 3: Regressions with Mis-Measured Networks
 
 Finally, we reproduce the results of Table 3 by creating a mis-measured
 network which fails to encode connections between companies and banks
