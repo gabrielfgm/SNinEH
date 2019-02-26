@@ -10,10 +10,11 @@ interactively. Alternatively, the file `scotland_eda.R` is a stand-alone
 file with R-code that produces each figure and table contained in the
 paper.
 
-In the sections below, we include a more interactive code through for
-the production of the tables and figures.
-
 ### Loading the data and network summary statistics
+
+As a first step we load the data and compute summary statistics about
+the network such as a table of cumulative degree distributions. This
+information is meantioned throughout the text.
 
 ``` r
 library(Hmisc)
@@ -169,6 +170,10 @@ also visualize and inspect the network.
 
 ### Visualizing the network
 
+We visualize the network using the network by mapping the industrial
+category of each company to greyscale, and the size of each node is
+proportional to the average dividend yield.
+
 ``` r
 ###########################
 # Visualizing the Network #
@@ -234,6 +239,9 @@ library(texreg)
 # Comparing centrality measures vs autoregression #
 ###################################################
 
+# we load an external file that contains functions that extract
+# coefficients and other information from regression models to be 
+# printed via the texreg function
 source("extract_helper_functions.R")
 
 # we build a helper function to cope with missing observations
@@ -287,67 +295,62 @@ sacsarlm3 <- run_regs(avg_div ~ capital + qualifications  + uncalled +
 
 screenreg(list(lm2, extract.stsls(sts2), extract.gstslshet(gsts2), sacsarlm2,
             lm3, extract.stsls(sts3), extract.gstslshet(gsts3), sacsarlm3), 
-       custom.model.names = c("OLS", "STSLS", "GSTSLS", "SAC/SARAR", "OLS", "STSLS", "GSTSLS", "SAC/SARAR"))
+       custom.model.names = c("OLS", "STSLS", "GSTSLS", "SAC/SARAR", "OLS", "STSLS", "GSTSLS", "SAC/SARAR"),
+       custom.coef.names = c(NA,NA,NA,"eigen",NA,NA,NA,"rho", rep(NA,13)),
+       reorder.coef = c(2:4,8:9, 5:7, 10:20,1), include.adjrs = F, include.rmse = F, include.aic = F,
+       include.lr = F)
 ```
 
     ## 
-    ## ===============================================================================================================
-    ##                      OLS        STSLS      GSTSLS     SAC/SARAR    OLS        STSLS      GSTSLS     SAC/SARAR  
-    ## ---------------------------------------------------------------------------------------------------------------
-    ## (Intercept)           5.56 ***   4.45 ***   3.92 ***     3.81 ***   6.13 ***   4.63 ***   4.26 ***     4.14 ***
-    ##                      (0.93)     (1.20)     (1.02)       (0.85)     (0.88)     (1.02)     (0.83)       (0.82)   
-    ## degree                0.23                                          0.10                                       
-    ##                      (0.31)                                        (0.30)                                      
-    ## betweenness          -0.00                                          0.00                                       
-    ##                      (0.01)                                        (0.01)                                      
-    ## eig_cent             -0.45                                          1.49                                       
-    ##                      (5.12)                                        (4.83)                                      
-    ## capital              -0.00       0.00      -0.00         0.00      -0.00       0.00       0.00         0.00    
-    ##                      (0.00)     (0.00)     (0.00)       (0.00)     (0.00)     (0.00)     (0.00)       (0.00)   
-    ## qualifications       -0.07      -0.08      -0.09        -0.08      -0.12      -0.11      -0.10        -0.16    
-    ##                      (0.15)     (0.14)     (0.07)       (0.13)     (0.15)     (0.14)     (0.09)       (0.13)   
-    ## uncalled              0.65 *     0.63 *     0.63 ***     0.62 *     0.34       0.36       0.41 *       0.28    
-    ##                      (0.28)     (0.28)     (0.15)       (0.26)     (0.32)     (0.32)     (0.18)       (0.29)   
-    ## Rho                              0.33                                          0.40 **                         
-    ##                                 (0.17)                                        (0.14)                           
-    ## rho                                         0.43 ***     0.61 ***                         0.51 ***     0.58 ***
-    ##                                            (0.13)       (0.10)                           (0.12)       (0.10)   
-    ## lambda                                     -0.49 **     -0.73 ***                        -0.59 **     -0.67 ***
-    ##                                            (0.18)       (0.12)                           (0.19)       (0.14)   
-    ## lag.capital                                             -0.00                                         -0.00    
-    ##                                                         (0.00)                                        (0.00)   
-    ## lag.qualifications                                      -0.17                                          0.13    
-    ##                                                         (0.22)                                        (0.29)   
-    ## lag.uncalled                                             0.01                                          0.54    
-    ##                                                         (0.44)                                        (0.55)   
-    ## railways                                                           -5.60 **   -6.00 **   -6.44 ***    -6.60 ** 
-    ##                                                                    (2.06)     (2.03)     (1.21)       (2.05)   
-    ## insurance                                                           1.75       0.29      -0.66         1.78    
-    ##                                                                    (2.97)     (2.98)     (2.56)       (2.85)   
-    ## investment                                                         -0.63      -1.33      -1.61        -1.63    
-    ##                                                                    (1.35)     (1.29)     (0.93)       (1.66)   
-    ## banking                                                             6.70 **    6.76 **    4.98 ***     6.04 *  
-    ##                                                                    (2.32)     (2.24)     (1.49)       (2.45)   
-    ## lag.railways                                                                                           2.68    
-    ##                                                                                                       (3.41)   
-    ## lag.insurance                                                                                         -6.37    
-    ##                                                                                                       (6.61)   
-    ## lag.investment                                                                                         0.35    
-    ##                                                                                                       (2.35)   
-    ## lag.banking                                                                                           -6.31    
-    ##                                                                                                       (3.71)   
-    ## ---------------------------------------------------------------------------------------------------------------
-    ## R^2                   0.10       0.10       0.07                    0.31       0.32       0.29                 
-    ## Adj. R^2              0.04                                          0.23                                       
-    ## Num. obs.            95         95.00      95.00        95         95         95.00      95.00        95       
-    ## RMSE                  5.34                                          4.80                                       
-    ## Parameters                                              10                                            18       
-    ## Log Likelihood                                        -284.64                                       -270.81    
-    ## AIC (Linear model)                                     592.68                                        576.88    
-    ## AIC (Spatial model)                                    589.29                                        577.61    
-    ## LR test: statistic                                      13.40                                         17.27    
-    ## LR test: p-value                                         0.02                                          0.04    
-    ## ===============================================================================================================
+    ## ==============================================================================================================
+    ##                     OLS        STSLS      GSTSLS     SAC/SARAR    OLS        STSLS      GSTSLS     SAC/SARAR  
+    ## --------------------------------------------------------------------------------------------------------------
+    ## degree               0.23                                          0.10                                       
+    ##                     (0.31)                                        (0.30)                                      
+    ## betweenness         -0.00                                          0.00                                       
+    ##                     (0.01)                                        (0.01)                                      
+    ## eigen               -0.45                                          1.49                                       
+    ##                     (5.12)                                        (4.83)                                      
+    ## rho                             0.33       0.43 ***     0.61 ***              0.40 **    0.51 ***     0.58 ***
+    ##                                (0.17)     (0.13)       (0.10)                (0.14)     (0.12)       (0.10)   
+    ## lambda                                    -0.49 **     -0.73 ***                        -0.59 **     -0.67 ***
+    ##                                           (0.18)       (0.12)                           (0.19)       (0.14)   
+    ## capital             -0.00       0.00      -0.00         0.00      -0.00       0.00       0.00         0.00    
+    ##                     (0.00)     (0.00)     (0.00)       (0.00)     (0.00)     (0.00)     (0.00)       (0.00)   
+    ## qualifications      -0.07      -0.08      -0.09        -0.08      -0.12      -0.11      -0.10        -0.16    
+    ##                     (0.15)     (0.14)     (0.07)       (0.13)     (0.15)     (0.14)     (0.09)       (0.13)   
+    ## uncalled             0.65 *     0.63 *     0.63 ***     0.62 *     0.34       0.36       0.41 *       0.28    
+    ##                     (0.28)     (0.28)     (0.15)       (0.26)     (0.32)     (0.32)     (0.18)       (0.29)   
+    ## lag.capital                                            -0.00                                         -0.00    
+    ##                                                        (0.00)                                        (0.00)   
+    ## lag.qualifications                                     -0.17                                          0.13    
+    ##                                                        (0.22)                                        (0.29)   
+    ## lag.uncalled                                            0.01                                          0.54    
+    ##                                                        (0.44)                                        (0.55)   
+    ## railways                                                          -5.60 **   -6.00 **   -6.44 ***    -6.60 ** 
+    ##                                                                   (2.06)     (2.03)     (1.21)       (2.05)   
+    ## insurance                                                          1.75       0.29      -0.66         1.78    
+    ##                                                                   (2.97)     (2.98)     (2.56)       (2.85)   
+    ## investment                                                        -0.63      -1.33      -1.61        -1.63    
+    ##                                                                   (1.35)     (1.29)     (0.93)       (1.66)   
+    ## banking                                                            6.70 **    6.76 **    4.98 ***     6.04 *  
+    ##                                                                   (2.32)     (2.24)     (1.49)       (2.45)   
+    ## lag.railways                                                                                          2.68    
+    ##                                                                                                      (3.41)   
+    ## lag.insurance                                                                                        -6.37    
+    ##                                                                                                      (6.61)   
+    ## lag.investment                                                                                        0.35    
+    ##                                                                                                      (2.35)   
+    ## lag.banking                                                                                          -6.31    
+    ##                                                                                                      (3.71)   
+    ## (Intercept)          5.56 ***   4.45 ***   3.92 ***     3.81 ***   6.13 ***   4.63 ***   4.26 ***     4.14 ***
+    ##                     (0.93)     (1.20)     (1.02)       (0.85)     (0.88)     (1.02)     (0.83)       (0.82)   
+    ## --------------------------------------------------------------------------------------------------------------
+    ## R^2                  0.10       0.10       0.07                    0.31       0.32       0.29                 
+    ## Num. obs.           95         95.00      95.00        95         95         95.00      95.00        95       
+    ## Parameters                                             10                                            18       
+    ## Log Likelihood                                       -284.64                                       -270.81    
+    ## ==============================================================================================================
     ## *** p < 0.001, ** p < 0.01, * p < 0.05
 
 Finally, we reproduce the results of Table 3 by creating a mis-measured
@@ -381,49 +384,44 @@ gsts2_nb <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div
 sacsarlm2_nb <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div, type = "sacsarlm", adjmat = adjmat_nb)
 
 screenreg(list(lm2_nb, extract.stsls(sts2_nb), extract.gstslshet(gsts2_nb), sacsarlm2_nb), 
-       custom.model.names = c("OLS", "STSLS", "GSTSLS", "SAC/SARAR"))
+       custom.model.names = c("OLS", "STSLS", "GSTSLS", "SAC/SARAR"),
+       custom.coef.names = c(rep(NA, 7), "rho", rep(NA, 5)),
+       reorder.coef = c(2:4, 8:9, 5:7, 10:12, 1), include.adjrs = F, include.rmse = F, include.aic = F,
+       include.lr = F)
 ```
 
     ## 
-    ## =================================================================
-    ##                      OLS        STSLS      GSTSLS     SAC/SARAR  
-    ## -----------------------------------------------------------------
-    ## (Intercept)           6.76 ***   6.61 ***   6.77 ***     6.06 ***
-    ##                      (0.89)     (1.11)     (1.15)       (1.05)   
-    ## degree_nb            -0.32                                       
-    ##                      (0.32)                                      
-    ## betweenness_nb       -0.00                                       
-    ##                      (0.01)                                      
-    ## eig_cent_nb           5.24                                       
-    ##                      (4.74)                                      
-    ## capital               0.00       0.00       0.00         0.00    
-    ##                      (0.00)     (0.00)     (0.00)       (0.00)   
-    ## qualifications       -0.01      -0.04      -0.03        -0.06    
-    ##                      (0.15)     (0.14)     (0.07)       (0.14)   
-    ## uncalled              0.64 *     0.66 *     0.63 ***     0.68 *  
-    ##                      (0.28)     (0.28)     (0.14)       (0.27)   
-    ## Rho                             -0.06                            
-    ##                                 (0.18)                           
-    ## rho                                        -0.09         0.22    
-    ##                                            (0.17)       (0.19)   
-    ## lambda                                      0.15        -0.25    
-    ##                                            (0.19)       (0.25)   
-    ## lag.capital                                             -0.00    
-    ##                                                         (0.00)   
-    ## lag.qualifications                                      -0.23    
-    ##                                                         (0.25)   
-    ## lag.uncalled                                             0.27    
-    ##                                                         (0.48)   
-    ## -----------------------------------------------------------------
-    ## R^2                   0.10       0.09       0.08                 
-    ## Adj. R^2              0.04                                       
-    ## Num. obs.            95         95.00      95.00        95       
-    ## RMSE                  5.34                                       
-    ## Parameters                                              10       
-    ## Log Likelihood                                        -290.36    
-    ## AIC (Linear model)                                     592.68    
-    ## AIC (Spatial model)                                    600.72    
-    ## LR test: statistic                                       1.96    
-    ## LR test: p-value                                         0.85    
-    ## =================================================================
+    ## ================================================================
+    ##                     OLS        STSLS      GSTSLS     SAC/SARAR  
+    ## ----------------------------------------------------------------
+    ## degree_nb           -0.32                                       
+    ##                     (0.32)                                      
+    ## betweenness_nb      -0.00                                       
+    ##                     (0.01)                                      
+    ## eig_cent_nb          5.24                                       
+    ##                     (4.74)                                      
+    ## rho                            -0.06      -0.09         0.22    
+    ##                                (0.18)     (0.17)       (0.19)   
+    ## lambda                                     0.15        -0.25    
+    ##                                           (0.19)       (0.25)   
+    ## capital              0.00       0.00       0.00         0.00    
+    ##                     (0.00)     (0.00)     (0.00)       (0.00)   
+    ## qualifications      -0.01      -0.04      -0.03        -0.06    
+    ##                     (0.15)     (0.14)     (0.07)       (0.14)   
+    ## uncalled             0.64 *     0.66 *     0.63 ***     0.68 *  
+    ##                     (0.28)     (0.28)     (0.14)       (0.27)   
+    ## lag.capital                                            -0.00    
+    ##                                                        (0.00)   
+    ## lag.qualifications                                     -0.23    
+    ##                                                        (0.25)   
+    ## lag.uncalled                                            0.27    
+    ##                                                        (0.48)   
+    ## (Intercept)          6.76 ***   6.61 ***   6.77 ***     6.06 ***
+    ##                     (0.89)     (1.11)     (1.15)       (1.05)   
+    ## ----------------------------------------------------------------
+    ## R^2                  0.10       0.09       0.08                 
+    ## Num. obs.           95         95.00      95.00        95       
+    ## Parameters                                             10       
+    ## Log Likelihood                                       -290.36    
+    ## ================================================================
     ## *** p < 0.001, ** p < 0.01, * p < 0.05

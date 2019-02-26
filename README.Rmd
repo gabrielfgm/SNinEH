@@ -22,11 +22,11 @@ repository and open the `.Rmd` file to follow the production of the tables and
 figures interactively. Alternatively, the file `scotland_eda.R` is a stand-alone
 file with R-code that produces each figure and table contained in the paper.
 
-In the sections below, we include a more interactive code through for the production
-of the tables and figures. 
-
 ### Loading the data and network summary statistics
 
+As a first step we load the data and compute summary statistics about the network
+such as a table of cumulative degree distributions. This information is 
+meantioned throughout the text.
 
 ```{r load_data}
 library(Hmisc)
@@ -112,6 +112,10 @@ as discussed in section 2 of the paper. We can also visualize and inspect the ne
 
 ### Visualizing the network
 
+We visualize the network using the network by mapping the industrial category of
+each company to greyscale, and the size of each node is proportional to 
+the average dividend yield.
+
 ```{r net_figure, fig.width=10, fig.height=8}
 
 ###########################
@@ -176,6 +180,9 @@ library(texreg)
 # Comparing centrality measures vs autoregression #
 ###################################################
 
+# we load an external file that contains functions that extract
+# coefficients and other information from regression models to be 
+# printed via the texreg function
 source("extract_helper_functions.R")
 
 # we build a helper function to cope with missing observations
@@ -229,7 +236,10 @@ sacsarlm3 <- run_regs(avg_div ~ capital + qualifications  + uncalled +
 
 screenreg(list(lm2, extract.stsls(sts2), extract.gstslshet(gsts2), sacsarlm2,
             lm3, extract.stsls(sts3), extract.gstslshet(gsts3), sacsarlm3), 
-       custom.model.names = c("OLS", "STSLS", "GSTSLS", "SAC/SARAR", "OLS", "STSLS", "GSTSLS", "SAC/SARAR"))
+       custom.model.names = c("OLS", "STSLS", "GSTSLS", "SAC/SARAR", "OLS", "STSLS", "GSTSLS", "SAC/SARAR"),
+       custom.coef.names = c(NA,NA,NA,"eigen",NA,NA,NA,"rho", rep(NA,13)),
+       reorder.coef = c(2:4,8:9, 5:7, 10:20,1), include.adjrs = F, include.rmse = F, include.aic = F,
+       include.lr = F)
 
 ```
 
@@ -264,7 +274,10 @@ gsts2_nb <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div
 sacsarlm2_nb <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div, type = "sacsarlm", adjmat = adjmat_nb)
 
 screenreg(list(lm2_nb, extract.stsls(sts2_nb), extract.gstslshet(gsts2_nb), sacsarlm2_nb), 
-       custom.model.names = c("OLS", "STSLS", "GSTSLS", "SAC/SARAR"))
+       custom.model.names = c("OLS", "STSLS", "GSTSLS", "SAC/SARAR"),
+       custom.coef.names = c(rep(NA, 7), "rho", rep(NA, 5)),
+       reorder.coef = c(2:4, 8:9, 5:7, 10:12, 1), include.adjrs = F, include.rmse = F, include.aic = F,
+       include.lr = F)
 
 
 
