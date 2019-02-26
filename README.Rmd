@@ -56,6 +56,13 @@ cons <- get.edgelist(cg)
 cg <- graph_from_data_frame(cons, directed = FALSE, vertices = imm$compid)
 cg <- simplify(cg)
 
+# Now set attributes
+vid <- V(cg)$name
+V(cg)$name <- as.character(Company$Company[as.character(Company$CompId) %in% vid])
+V(cg)$ind <- Company$IndID[as.character(Company$CompId) %in% vid]
+V(cg)$cap <- as.numeric(Company$Capital[as.character(Company$CompId) %in% vid])
+V(cg)$prof <- as.numeric(imm$avg_div[as.character(imm$compid) %in% vid])
+
 # Now extract adjacency matrix
 adjmat <- get.adjacency(cg, sparse = F)
 
@@ -121,12 +128,6 @@ the average dividend yield.
 ###########################
 # Visualizing the Network #
 ###########################
-# Set attributes
-vid <- V(cg)$name
-V(cg)$name <- as.character(Company$Company[as.character(Company$CompId) %in% vid])
-V(cg)$ind <- Company$IndID[as.character(Company$CompId) %in% vid]
-V(cg)$cap <- as.numeric(Company$Capital[as.character(Company$CompId) %in% vid])
-V(cg)$prof <- as.numeric(imm$avg_div[as.character(imm$compid) %in% vid])
 
 library(GGally)
 library(intergraph)

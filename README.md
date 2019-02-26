@@ -48,6 +48,13 @@ cons <- get.edgelist(cg)
 cg <- graph_from_data_frame(cons, directed = FALSE, vertices = imm$compid)
 cg <- simplify(cg)
 
+# Now set attributes
+vid <- V(cg)$name
+V(cg)$name <- as.character(Company$Company[as.character(Company$CompId) %in% vid])
+V(cg)$ind <- Company$IndID[as.character(Company$CompId) %in% vid]
+V(cg)$cap <- as.numeric(Company$Capital[as.character(Company$CompId) %in% vid])
+V(cg)$prof <- as.numeric(imm$avg_div[as.character(imm$compid) %in% vid])
+
 # Now extract adjacency matrix
 adjmat <- get.adjacency(cg, sparse = F)
 
@@ -142,17 +149,17 @@ degree.df %>% group_by(degree) %>% summarise(N = n(), Freq. = N/nrow(degree.df))
 degree.df %>% arrange(-degree) %>% head(10L)
 ```
 
-    ##    degree names
-    ## 1      26     2
-    ## 2      18    76
-    ## 3      17    71
-    ## 4      14     1
-    ## 5      14    53
-    ## 6      14    73
-    ## 7      13    17
-    ## 8      12    33
-    ## 9      12    69
-    ## 10     11     4
+    ##    degree                                names
+    ## 1      26                   Caledonian Railway
+    ## 2      18                   Standard Life Ass.
+    ## 3      17                      Clydesdale Bank
+    ## 4      14                North British Railway
+    ## 5      14 Young's Paraffin Ligth & Mineral Oil
+    ## 6      14       Scottish Widows Fund Life Ass.
+    ## 7      13             Tharsis Sulphur & Copper
+    ## 8      12                   Irrawaddy Flotilla
+    ## 9      12               Union Bank of Scotland
+    ## 10     11                        J. & P. Coats
 
 ``` r
 degree.df %>% mutate(upper.20 = degree >= quantile(degree, .8),
@@ -178,12 +185,6 @@ proportional to the average dividend yield.
 ###########################
 # Visualizing the Network #
 ###########################
-# Set attributes
-vid <- V(cg)$name
-V(cg)$name <- as.character(Company$Company[as.character(Company$CompId) %in% vid])
-V(cg)$ind <- Company$IndID[as.character(Company$CompId) %in% vid]
-V(cg)$cap <- as.numeric(Company$Capital[as.character(Company$CompId) %in% vid])
-V(cg)$prof <- as.numeric(imm$avg_div[as.character(imm$compid) %in% vid])
 
 library(GGally)
 library(intergraph)
