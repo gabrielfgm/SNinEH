@@ -201,6 +201,7 @@ levels(indcat$IndCat) <- cat_cat
 
 V(cg)$indcat <- as.character(indcat$IndCat)
 
+set.seed(42)
 ggnet2(simplify(cg), mode = 'fruchtermanreingold', layout.exp = .3,
        size = "prof", size.legend = "Average Dividend Yield (%)", size.cut = 5, max_size = 10,
        color = "indcat", 
