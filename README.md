@@ -206,7 +206,7 @@ ggnet2(simplify(cg), mode = 'fruchtermanreingold', layout.exp = .3,
        size = "prof", size.legend = "Average Dividend Yield (%)", size.cut = 5, max_size = 10,
        color = "indcat", 
        fill = "indcat",
-       palette = "Greys", 
+       palette = "Dark2", 
        color.legend = "Industry Category", 
        na.rm = "prof"
        ) +
@@ -214,7 +214,7 @@ ggnet2(simplify(cg), mode = 'fruchtermanreingold', layout.exp = .3,
   guides(color = guide_legend(override.aes = 
                                 list(shape=21, 
                                      size=10, 
-                                     fill=brewer.pal(8, "Greys"), 
+                                     fill=brewer.pal(8, "Dark2"), 
                                      color = "black")))
 ```
 
