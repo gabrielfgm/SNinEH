@@ -164,7 +164,7 @@ and we output the results using the package `texreg`. In this example we output 
 tables to html. In the paper they are output to latex, and we edit them slightly
 (removing the fixed effects) in order to truncate them for publication.
 
-```{r table_2, results = "asis"}
+```{r table_2}
 ##################################
 # Estimations of Network effects #
 ##################################
@@ -244,7 +244,7 @@ Finally, we reproduce the results of Table 3 by creating a mis-measured network
 which fails to encode connections between companies and banks and re-estimating
 the regressions.
 
-```{r table_3, results = "asis"}
+```{r table_3}
 #######################################################
 # Estimations of Network effects w/ Measurement Error #
 #######################################################
