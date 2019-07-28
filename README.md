@@ -353,8 +353,8 @@ screenreg(list(lm2, extract.stsls(sts2), extract.gstslshet(gsts2), sacsarlm2,
     ## *** p < 0.001, ** p < 0.01, * p < 0.05
 
 Finally, we reproduce the results of Table 3 by creating a mis-measured
-network which fails to encode connections between companies and banks
-and re-estimating the regressions.
+network which fails to encode connections stemming from mining
+companies.
 
 ``` r
 #######################################################
