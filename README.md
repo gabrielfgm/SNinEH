@@ -209,7 +209,7 @@ ggnet2(cg, mode = 'fruchtermanreingold', layout.exp = .3,
   geom_point(aes(size = size), shape = 21, color = "black") + 
   guides(color = guide_legend(override.aes = 
                                 list(shape=21, 
-                                     size=10, 
+                                     size=7, 
                                      fill=brewer.pal(8, "Dark2"), 
                                      color = "black")))
 ```
