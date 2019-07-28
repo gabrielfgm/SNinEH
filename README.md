@@ -221,8 +221,9 @@ ggnet2(cg, mode = 'fruchtermanreingold', layout.exp = .3,
 To estimate the regressions we use the packages `spdep` and `sphet`
 which were written for spatial econometrics, and we output the results
 using the package `texreg`. In this example we output the tables to
-html. In the paper they are output to latex, and we edit them slightly
-(removing the fixed effects) in order to truncate them for publication.
+text. In the paper they are output to latex, and we edit them slightly
+(removing the fixed effects and adding commentary) in order to prepare
+them for publication. The tables are in other respects identical.
 
 ``` r
 ##################################
