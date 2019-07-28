@@ -139,7 +139,7 @@ levels(indcat$IndCat) <- cat_cat
 
 V(cg)$indcat <- as.character(indcat$IndCat)
 
-set.seed(42)
+set.seed(123)
 ggnet2(cg, mode = 'fruchtermanreingold', layout.exp = .3,
        size = "prof", size.legend = "Average Dividend Yield (%)", 
        size.cut = 5, max_size = 10,
@@ -249,7 +249,7 @@ the regressions.
 # Estimations of Network effects w/ Measurement Error #
 #######################################################
 
-cg2 <- cg %>% delete.edges(E(cg)[from(V(cg)[V(cg)$indcat=="Banking"])])
+cg2 <- cg %>% delete.edges(E(cg)[from(V(cg)[V(cg)$indcat=="Mining"])])
 
 # Now extract adjacency matrix
 adjmat_nb <- get.adjacency(cg2, sparse = F)

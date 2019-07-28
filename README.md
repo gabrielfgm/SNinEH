@@ -196,7 +196,7 @@ levels(indcat$IndCat) <- cat_cat
 
 V(cg)$indcat <- as.character(indcat$IndCat)
 
-set.seed(42)
+set.seed(123)
 ggnet2(cg, mode = 'fruchtermanreingold', layout.exp = .3,
        size = "prof", size.legend = "Average Dividend Yield (%)", 
        size.cut = 5, max_size = 10,
@@ -360,7 +360,7 @@ and re-estimating the regressions.
 # Estimations of Network effects w/ Measurement Error #
 #######################################################
 
-cg2 <- cg %>% delete.edges(E(cg)[from(V(cg)[V(cg)$indcat=="Banking"])])
+cg2 <- cg %>% delete.edges(E(cg)[from(V(cg)[V(cg)$indcat=="Mining"])])
 
 # Now extract adjacency matrix
 adjmat_nb <- get.adjacency(cg2, sparse = F)
@@ -392,34 +392,34 @@ screenreg(list(lm2_nb, extract.stsls(sts2_nb), extract.gstslshet(gsts2_nb), sacs
     ## ================================================================
     ##                     OLS        STSLS      GSTSLS     SAC/SARAR  
     ## ----------------------------------------------------------------
-    ## degree_nb           -0.32                                       
-    ##                     (0.32)                                      
-    ## betweenness_nb      -0.00                                       
+    ## degree_nb            0.16                                       
+    ##                     (0.34)                                      
+    ## betweenness_nb      -0.01                                       
     ##                     (0.01)                                      
-    ## eig_cent_nb          5.24                                       
-    ##                     (4.74)                                      
-    ## rho                            -0.06      -0.09         0.22    
-    ##                                (0.18)     (0.17)       (0.19)   
-    ## lambda                                     0.15        -0.25    
-    ##                                           (0.19)       (0.25)   
+    ## eig_cent_nb          1.39                                       
+    ##                     (6.41)                                      
+    ## rho                             0.15       0.19         0.07    
+    ##                                (0.16)     (0.15)       (0.25)   
+    ## lambda                                    -0.30        -0.19    
+    ##                                           (0.19)       (0.31)   
     ## capital              0.00       0.00       0.00         0.00    
     ##                     (0.00)     (0.00)     (0.00)       (0.00)   
-    ## qualifications      -0.01      -0.04      -0.03        -0.06    
-    ##                     (0.15)     (0.14)     (0.07)       (0.14)   
-    ## uncalled             0.64 *     0.66 *     0.63 ***     0.68 *  
-    ##                     (0.28)     (0.28)     (0.14)       (0.27)   
+    ## qualifications      -0.05      -0.07      -0.07        -0.06    
+    ##                     (0.15)     (0.15)     (0.08)       (0.14)   
+    ## uncalled             0.64 *     0.63 *     0.66 ***     0.65 *  
+    ##                     (0.28)     (0.28)     (0.16)       (0.27)   
     ## lag.capital                                            -0.00    
     ##                                                        (0.00)   
-    ## lag.qualifications                                     -0.23    
+    ## lag.qualifications                                     -0.03    
     ##                                                        (0.25)   
-    ## lag.uncalled                                            0.27    
-    ##                                                        (0.48)   
-    ## (Intercept)          6.76 ***   6.61 ***   6.77 ***     6.06 ***
-    ##                     (0.89)     (1.11)     (1.15)       (1.05)   
+    ## lag.uncalled                                            0.38    
+    ##                                                        (0.49)   
+    ## (Intercept)          5.88 ***   5.66 ***   5.42 ***     5.94 ***
+    ##                     (0.85)     (0.98)     (1.11)       (1.01)   
     ## ----------------------------------------------------------------
     ## R^2                  0.10       0.09       0.08                 
     ## Num. obs.           95         95.00      95.00        95       
     ## Parameters                                             10       
-    ## Log Likelihood                                       -290.36    
+    ## Log Likelihood                                       -290.35    
     ## ================================================================
     ## *** p < 0.001, ** p < 0.01, * p < 0.05
