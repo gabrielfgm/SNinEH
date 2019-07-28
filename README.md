@@ -17,72 +17,9 @@ the production of the tables and figures.
 
 ``` r
 library(Hmisc)
-```
-
-    ## Loading required package: lattice
-
-    ## Loading required package: survival
-
-    ## Loading required package: Formula
-
-    ## Loading required package: ggplot2
-
-    ## 
-    ## Attaching package: 'Hmisc'
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     format.pval, units
-
-``` r
 library(tidyverse)
-```
-
-    ## ── Attaching packages ────────────────────── tidyverse 1.2.1 ──
-
-    ## ✔ tibble  2.1.3     ✔ purrr   0.3.2
-    ## ✔ tidyr   0.8.3     ✔ dplyr   0.8.3
-    ## ✔ readr   1.3.1     ✔ stringr 1.4.0
-    ## ✔ tibble  2.1.3     ✔ forcats 0.4.0
-
-    ## ── Conflicts ───────────────────────── tidyverse_conflicts() ──
-    ## ✖ dplyr::filter()    masks stats::filter()
-    ## ✖ dplyr::lag()       masks stats::lag()
-    ## ✖ dplyr::src()       masks Hmisc::src()
-    ## ✖ dplyr::summarize() masks Hmisc::summarize()
-
-``` r
 library(igraph)
-```
 
-    ## 
-    ## Attaching package: 'igraph'
-
-    ## The following objects are masked from 'package:dplyr':
-    ## 
-    ##     as_data_frame, groups, union
-
-    ## The following objects are masked from 'package:purrr':
-    ## 
-    ##     compose, simplify
-
-    ## The following object is masked from 'package:tidyr':
-    ## 
-    ##     crossing
-
-    ## The following object is masked from 'package:tibble':
-    ## 
-    ##     as_data_frame
-
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     decompose, spectrum
-
-    ## The following object is masked from 'package:base':
-    ## 
-    ##     union
-
-``` r
 sc <- mdb.get("data/Scotland.mdb")
 
 # Break database into constituent dataframes
@@ -245,31 +182,13 @@ also visualize and inspect the network.
 ###########################
 
 library(GGally)
-```
-
-    ## Registered S3 method overwritten by 'GGally':
-    ##   method from   
-    ##   +.gg   ggplot2
-
-    ## 
-    ## Attaching package: 'GGally'
-
-    ## The following object is masked from 'package:dplyr':
-    ## 
-    ##     nasa
-
-``` r
 library(intergraph)
 library(RColorBrewer)
 
 # use industrial categories
 indcat <- data.frame(IndID = V(cg)$ind)
 indcat <- left_join(indcat, Industry)
-```
 
-    ## Joining, by = "IndID"
-
-``` r
 cat_cat <- c("Mining", "Heavy Man.", "Railways", "Energy", "Light Man.", 
              "Banking", "Insurance", "Inv. Trusts and Property")
 indcat$IndCat <- factor(indcat$IndCat)
@@ -295,8 +214,6 @@ ggnet2(cg, mode = 'fruchtermanreingold', layout.exp = .3,
                                      color = "black")))
 ```
 
-    ## na.rm removed 13 nodes out of 108
-
 ![](README_files/figure-markdown_github/net_figure-1.png)
 
 ### Estimating network regressions
@@ -314,38 +231,8 @@ html. In the paper they are output to latex, and we edit them slightly
 
 library(sphet)
 library(spdep)
-```
-
-    ## Loading required package: sp
-
-    ## Loading required package: spData
-
-    ## To access larger datasets in this package, install the spDataLarge
-    ## package with: `install.packages('spDataLarge',
-    ## repos='https://nowosad.github.io/drat/', type='source')`
-
-    ## Loading required package: sf
-
-    ## Linking to GEOS 3.7.1, GDAL 2.4.0, PROJ 5.2.0
-
-``` r
 library(texreg)
-```
 
-    ## Version:  1.36.23
-    ## Date:     2017-03-03
-    ## Author:   Philip Leifeld (University of Glasgow)
-    ## 
-    ## Please cite the JSS article in your publications -- see citation("texreg").
-
-    ## 
-    ## Attaching package: 'texreg'
-
-    ## The following object is masked from 'package:tidyr':
-    ## 
-    ##     extract
-
-``` r
 ###################################################
 # Comparing centrality measures vs autoregression #
 ###################################################
@@ -392,118 +279,18 @@ imm$banking <- as.numeric(imm$indid == 22)
 
 lm2 <- lm(avg_div ~ degree + betweenness + eig_cent + capital + qualifications  + uncalled, data = imm)
 sts2 <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div, type = "stsls", adjmat = adjmat)
-```
-
-    ## Warning in nb2listw(res$neighbours, glist = res$weights, style = style, :
-    ## zero sum general weights
-
-    ## Warning: Function stsls moved to the spatialreg package
-
-    ## Registered S3 methods overwritten by 'spatialreg':
-    ##   method                   from 
-    ##   residuals.stsls          spdep
-    ##   deviance.stsls           spdep
-    ##   coef.stsls               spdep
-    ##   print.stsls              spdep
-    ##   summary.stsls            spdep
-    ##   print.summary.stsls      spdep
-    ##   residuals.gmsar          spdep
-    ##   deviance.gmsar           spdep
-    ##   coef.gmsar               spdep
-    ##   fitted.gmsar             spdep
-    ##   print.gmsar              spdep
-    ##   summary.gmsar            spdep
-    ##   print.summary.gmsar      spdep
-    ##   print.lagmess            spdep
-    ##   summary.lagmess          spdep
-    ##   print.summary.lagmess    spdep
-    ##   residuals.lagmess        spdep
-    ##   deviance.lagmess         spdep
-    ##   coef.lagmess             spdep
-    ##   fitted.lagmess           spdep
-    ##   logLik.lagmess           spdep
-    ##   fitted.SFResult          spdep
-    ##   print.SFResult           spdep
-    ##   fitted.ME_res            spdep
-    ##   print.ME_res             spdep
-    ##   print.lagImpact          spdep
-    ##   plot.lagImpact           spdep
-    ##   summary.lagImpact        spdep
-    ##   HPDinterval.lagImpact    spdep
-    ##   print.summary.lagImpact  spdep
-    ##   print.sarlm              spdep
-    ##   summary.sarlm            spdep
-    ##   residuals.sarlm          spdep
-    ##   deviance.sarlm           spdep
-    ##   coef.sarlm               spdep
-    ##   vcov.sarlm               spdep
-    ##   fitted.sarlm             spdep
-    ##   logLik.sarlm             spdep
-    ##   anova.sarlm              spdep
-    ##   predict.sarlm            spdep
-    ##   print.summary.sarlm      spdep
-    ##   print.sarlm.pred         spdep
-    ##   as.data.frame.sarlm.pred spdep
-    ##   residuals.spautolm       spdep
-    ##   deviance.spautolm        spdep
-    ##   coef.spautolm            spdep
-    ##   fitted.spautolm          spdep
-    ##   print.spautolm           spdep
-    ##   summary.spautolm         spdep
-    ##   logLik.spautolm          spdep
-    ##   print.summary.spautolm   spdep
-    ##   print.WXImpact           spdep
-    ##   summary.WXImpact         spdep
-    ##   print.summary.WXImpact   spdep
-    ##   predict.SLX              spdep
-
-``` r
 gsts2 <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div, type = "gstsls", adjmat = adjmat)
-```
-
-    ## Warning in nb2listw(res$neighbours, glist = res$weights, style = style, :
-    ## zero sum general weights
-
-``` r
 sacsarlm2 <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div, type = "sacsarlm", adjmat = adjmat)
-```
-
-    ## Warning in nb2listw(res$neighbours, glist = res$weights, style = style, :
-    ## zero sum general weights
-
-    ## Warning: Function sacsarlm moved to the spatialreg package
-
-``` r
 lm3 <- lm(avg_div ~ degree + betweenness + eig_cent + capital + qualifications + uncalled + railways + insurance + investment + banking, 
                data = imm[!is.na(imm$avg_div), ])
 sts3 <- run_regs(avg_div ~ capital + qualifications  + uncalled + 
                    railways + insurance + investment + banking, imm$avg_div, type = "stsls", adjmat = adjmat)
-```
-
-    ## Warning in nb2listw(res$neighbours, glist = res$weights, style = style, :
-    ## zero sum general weights
-
-    ## Warning: Function stsls moved to the spatialreg package
-
-``` r
 gsts3 <- run_regs(avg_div ~ capital + qualifications  + uncalled + 
                     railways + insurance + investment + banking, imm$avg_div, type = "gstsls", adjmat = adjmat)
-```
-
-    ## Warning in nb2listw(res$neighbours, glist = res$weights, style = style, :
-    ## zero sum general weights
-
-``` r
 sacsarlm3 <- run_regs(avg_div ~ capital + qualifications  + uncalled + 
                         railways + insurance + investment + banking, imm$avg_div, type = "sacsarlm", adjmat = adjmat)
-```
 
-    ## Warning in nb2listw(res$neighbours, glist = res$weights, style = style, :
-    ## zero sum general weights
 
-    ## Warning: Function sacsarlm moved to the spatialreg package
-
-``` r
 screenreg(list(lm2, extract.stsls(sts2), extract.gstslshet(gsts2), sacsarlm2,
             lm3, extract.stsls(sts3), extract.gstslshet(gsts3), sacsarlm3), 
        custom.model.names = c("OLS", "STSLS", "GSTSLS", "SAC/SARAR", "OLS", "STSLS", "GSTSLS", "SAC/SARAR"),
@@ -590,30 +377,9 @@ imm$betweenness_nb <- betweenness(cg2)
 # Make wide table
 lm2_nb <- lm(avg_div ~ degree_nb + betweenness_nb + eig_cent_nb + capital + qualifications  + uncalled, data = imm)
 sts2_nb <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div, type = "stsls", adjmat = adjmat_nb)
-```
-
-    ## Warning in nb2listw(res$neighbours, glist = res$weights, style = style, :
-    ## zero sum general weights
-
-    ## Warning: Function stsls moved to the spatialreg package
-
-``` r
 gsts2_nb <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div, type = "gstsls", adjmat = adjmat_nb)
-```
-
-    ## Warning in nb2listw(res$neighbours, glist = res$weights, style = style, :
-    ## zero sum general weights
-
-``` r
 sacsarlm2_nb <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div, type = "sacsarlm", adjmat = adjmat_nb)
-```
 
-    ## Warning in nb2listw(res$neighbours, glist = res$weights, style = style, :
-    ## zero sum general weights
-
-    ## Warning: Function sacsarlm moved to the spatialreg package
-
-``` r
 screenreg(list(lm2_nb, extract.stsls(sts2_nb), extract.gstslshet(gsts2_nb), sacsarlm2_nb), 
        custom.model.names = c("OLS", "STSLS", "GSTSLS", "SAC/SARAR"),
        custom.coef.names = c(rep(NA, 7), "rho", rep(NA, 5)),
