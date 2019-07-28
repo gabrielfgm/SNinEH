@@ -29,6 +29,7 @@ of the tables and figures.
 
 ```{r load_data}
 library(Hmisc)
+library(tidyverse)
 library(igraph)
 
 sc <- mdb.get("data/Scotland.mdb")
@@ -52,7 +53,14 @@ imm <- readxl::read_xlsx("data/data_imm.xlsx")
 # First add in unconnected nodes
 cons <- get.edgelist(cg)
 cg <- graph_from_data_frame(cons, directed = FALSE, vertices = imm$compid)
-cg <- simplify(cg)
+cg <- igraph::simplify(cg)
+
+# Now set attributes
+vid <- V(cg)$name
+V(cg)$name <- as.character(Company$Company[as.character(Company$CompId) %in% vid])
+V(cg)$ind <- Company$IndID[as.character(Company$CompId) %in% vid]
+V(cg)$cap <- as.numeric(Company$Capital[as.character(Company$CompId) %in% vid])
+V(cg)$prof <- as.numeric(imm$avg_div[as.character(imm$compid) %in% vid])
 
 # Now extract adjacency matrix
 adjmat <- get.adjacency(cg, sparse = F)
@@ -115,12 +123,6 @@ as discussed in section 2 of the paper. We can also visualize and inspect the ne
 ###########################
 # Visualizing the Network #
 ###########################
-# Set attributes
-vid <- V(cg)$name
-V(cg)$name <- as.character(Company$Company[as.character(Company$CompId) %in% vid])
-V(cg)$ind <- Company$IndID[as.character(Company$CompId) %in% vid]
-V(cg)$cap <- as.numeric(Company$Capital[as.character(Company$CompId) %in% vid])
-V(cg)$prof <- as.numeric(imm$avg_div[as.character(imm$compid) %in% vid])
 
 library(GGally)
 library(intergraph)
@@ -130,17 +132,20 @@ library(RColorBrewer)
 indcat <- data.frame(IndID = V(cg)$ind)
 indcat <- left_join(indcat, Industry)
 
-cat_cat <- c("Mining", "Heavy Man.", "Railways", "Energy", "Light Man.", "Banking", "Insurance", "Inv. Trusts and Property")
+cat_cat <- c("Mining", "Heavy Man.", "Railways", "Energy", "Light Man.", 
+             "Banking", "Insurance", "Inv. Trusts and Property")
 indcat$IndCat <- factor(indcat$IndCat)
 levels(indcat$IndCat) <- cat_cat
 
 V(cg)$indcat <- as.character(indcat$IndCat)
 
-ggnet2(simplify(cg), mode = 'fruchtermanreingold', layout.exp = .3,
-       size = "prof", size.legend = "Average Dividend Yield (%)", size.cut = 5, max_size = 10,
+set.seed(42)
+ggnet2(cg, mode = 'fruchtermanreingold', layout.exp = .3,
+       size = "prof", size.legend = "Average Dividend Yield (%)", 
+       size.cut = 5, max_size = 10,
        color = "indcat", 
        fill = "indcat",
-       palette = "Greys", 
+       palette = "Dark2", 
        color.legend = "Industry Category", 
        na.rm = "prof"
        ) +
@@ -148,9 +153,8 @@ ggnet2(simplify(cg), mode = 'fruchtermanreingold', layout.exp = .3,
   guides(color = guide_legend(override.aes = 
                                 list(shape=21, 
                                      size=10, 
-                                     fill=brewer.pal(8, "Greys"), 
+                                     fill=brewer.pal(8, "Dark2"), 
                                      color = "black")))
-
 ```
 
 ### Estimating network regressions
@@ -173,7 +177,10 @@ library(texreg)
 # Comparing centrality measures vs autoregression #
 ###################################################
 
-source("extract_helper_functions.R")
+# we load an external file that contains functions that extract
+# coefficients and other information from regression models to be 
+# printed via the texreg function
+source("R/extract_helper_functions.R")
 
 # we build a helper function to cope with missing observations
 # when running network econometric models
@@ -224,9 +231,12 @@ sacsarlm3 <- run_regs(avg_div ~ capital + qualifications  + uncalled +
                         railways + insurance + investment + banking, imm$avg_div, type = "sacsarlm", adjmat = adjmat)
 
 
-htmlreg(list(lm2, extract.stsls(sts2), extract.gstslshet(gsts2), sacsarlm2,
+screenreg(list(lm2, extract.stsls(sts2), extract.gstslshet(gsts2), sacsarlm2,
             lm3, extract.stsls(sts3), extract.gstslshet(gsts3), sacsarlm3), 
-       custom.model.names = c("OLS", "STSLS", "GSTSLS", "SAC/SARAR", "OLS", "STSLS", "GSTSLS", "SAC/SARAR"))
+       custom.model.names = c("OLS", "STSLS", "GSTSLS", "SAC/SARAR", "OLS", "STSLS", "GSTSLS", "SAC/SARAR"),
+       custom.coef.names = c(NA,NA,NA,"eigen",NA,NA,NA,"rho", rep(NA,13)),
+       reorder.coef = c(2:4,8:9, 5:7, 10:20,1), include.adjrs = F, include.rmse = F, include.aic = F,
+       include.lr = F)
 
 ```
 
@@ -260,8 +270,11 @@ sts2_nb <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div,
 gsts2_nb <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div, type = "gstsls", adjmat = adjmat_nb)
 sacsarlm2_nb <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div, type = "sacsarlm", adjmat = adjmat_nb)
 
-htmlreg(list(lm2_nb, extract.stsls(sts2_nb), extract.gstslshet(gsts2_nb), sacsarlm2_nb), 
-       custom.model.names = c("OLS", "STSLS", "GSTSLS", "SAC/SARAR"))
+screenreg(list(lm2_nb, extract.stsls(sts2_nb), extract.gstslshet(gsts2_nb), sacsarlm2_nb), 
+       custom.model.names = c("OLS", "STSLS", "GSTSLS", "SAC/SARAR"),
+       custom.coef.names = c(rep(NA, 7), "rho", rep(NA, 5)),
+       reorder.coef = c(2:4, 8:9, 5:7, 10:12, 1), include.adjrs = F, include.rmse = F, include.aic = F,
+       include.lr = F)
 
 
 

@@ -10,17 +10,79 @@ interactively. Alternatively, the file `scotland_eda.R` is a stand-alone
 file with R-code that produces each figure and table contained in the
 paper.
 
-### Loading the data and network summary statistics
+In the sections below, we include a more interactive code through for
+the production of the tables and figures.
 
-As a first step we load the data and compute summary statistics about
-the network such as a table of cumulative degree distributions. This
-information is meantioned throughout the text.
+### Loading the data and network summary statistics
 
 ``` r
 library(Hmisc)
-library(tidyverse)
-library(igraph)
+```
 
+    ## Loading required package: lattice
+
+    ## Loading required package: survival
+
+    ## Loading required package: Formula
+
+    ## Loading required package: ggplot2
+
+    ## 
+    ## Attaching package: 'Hmisc'
+
+    ## The following objects are masked from 'package:base':
+    ## 
+    ##     format.pval, units
+
+``` r
+library(tidyverse)
+```
+
+    ## ── Attaching packages ────────────────────── tidyverse 1.2.1 ──
+
+    ## ✔ tibble  2.1.3     ✔ purrr   0.3.2
+    ## ✔ tidyr   0.8.3     ✔ dplyr   0.8.3
+    ## ✔ readr   1.3.1     ✔ stringr 1.4.0
+    ## ✔ tibble  2.1.3     ✔ forcats 0.4.0
+
+    ## ── Conflicts ───────────────────────── tidyverse_conflicts() ──
+    ## ✖ dplyr::filter()    masks stats::filter()
+    ## ✖ dplyr::lag()       masks stats::lag()
+    ## ✖ dplyr::src()       masks Hmisc::src()
+    ## ✖ dplyr::summarize() masks Hmisc::summarize()
+
+``` r
+library(igraph)
+```
+
+    ## 
+    ## Attaching package: 'igraph'
+
+    ## The following objects are masked from 'package:dplyr':
+    ## 
+    ##     as_data_frame, groups, union
+
+    ## The following objects are masked from 'package:purrr':
+    ## 
+    ##     compose, simplify
+
+    ## The following object is masked from 'package:tidyr':
+    ## 
+    ##     crossing
+
+    ## The following object is masked from 'package:tibble':
+    ## 
+    ##     as_data_frame
+
+    ## The following objects are masked from 'package:stats':
+    ## 
+    ##     decompose, spectrum
+
+    ## The following object is masked from 'package:base':
+    ## 
+    ##     union
+
+``` r
 sc <- mdb.get("data/Scotland.mdb")
 
 # Break database into constituent dataframes
@@ -46,7 +108,7 @@ imm <- readxl::read_xlsx("data/data_imm.xlsx")
 # First add in unconnected nodes
 cons <- get.edgelist(cg)
 cg <- graph_from_data_frame(cons, directed = FALSE, vertices = imm$compid)
-cg <- simplify(cg)
+cg <- igraph::simplify(cg)
 
 # Now set attributes
 vid <- V(cg)$name
@@ -175,11 +237,7 @@ The above summary statistics underpin the discussion of common empirical
 network characteristics as discussed in section 2 of the paper. We can
 also visualize and inspect the network.
 
-### Reproducing Figure 1: Visualizing the network
-
-We visualize the network using the network by mapping the industrial
-category of each company to greyscale, and the size of each node is
-proportional to the average dividend yield.
+### Visualizing the network
 
 ``` r
 ###########################
@@ -187,13 +245,31 @@ proportional to the average dividend yield.
 ###########################
 
 library(GGally)
+```
+
+    ## Registered S3 method overwritten by 'GGally':
+    ##   method from   
+    ##   +.gg   ggplot2
+
+    ## 
+    ## Attaching package: 'GGally'
+
+    ## The following object is masked from 'package:dplyr':
+    ## 
+    ##     nasa
+
+``` r
 library(intergraph)
 library(RColorBrewer)
 
 # use industrial categories
 indcat <- data.frame(IndID = V(cg)$ind)
 indcat <- left_join(indcat, Industry)
+```
 
+    ## Joining, by = "IndID"
+
+``` r
 cat_cat <- c("Mining", "Heavy Man.", "Railways", "Energy", "Light Man.", 
              "Banking", "Insurance", "Inv. Trusts and Property")
 indcat$IndCat <- factor(indcat$IndCat)
@@ -202,8 +278,9 @@ levels(indcat$IndCat) <- cat_cat
 V(cg)$indcat <- as.character(indcat$IndCat)
 
 set.seed(42)
-ggnet2(simplify(cg), mode = 'fruchtermanreingold', layout.exp = .3,
-       size = "prof", size.legend = "Average Dividend Yield (%)", size.cut = 5, max_size = 10,
+ggnet2(cg, mode = 'fruchtermanreingold', layout.exp = .3,
+       size = "prof", size.legend = "Average Dividend Yield (%)", 
+       size.cut = 5, max_size = 10,
        color = "indcat", 
        fill = "indcat",
        palette = "Dark2", 
@@ -218,14 +295,16 @@ ggnet2(simplify(cg), mode = 'fruchtermanreingold', layout.exp = .3,
                                      color = "black")))
 ```
 
+    ## na.rm removed 13 nodes out of 108
+
 ![](README_files/figure-markdown_github/net_figure-1.png)
 
-### Reproducing Table 2: Estimating network regressions
+### Estimating network regressions
 
 To estimate the regressions we use the packages `spdep` and `sphet`
 which were written for spatial econometrics, and we output the results
 using the package `texreg`. In this example we output the tables to
-text. In the paper they are output to latex, and we edit them slightly
+html. In the paper they are output to latex, and we edit them slightly
 (removing the fixed effects) in order to truncate them for publication.
 
 ``` r
@@ -235,8 +314,38 @@ text. In the paper they are output to latex, and we edit them slightly
 
 library(sphet)
 library(spdep)
-library(texreg)
+```
 
+    ## Loading required package: sp
+
+    ## Loading required package: spData
+
+    ## To access larger datasets in this package, install the spDataLarge
+    ## package with: `install.packages('spDataLarge',
+    ## repos='https://nowosad.github.io/drat/', type='source')`
+
+    ## Loading required package: sf
+
+    ## Linking to GEOS 3.7.1, GDAL 2.4.0, PROJ 5.2.0
+
+``` r
+library(texreg)
+```
+
+    ## Version:  1.36.23
+    ## Date:     2017-03-03
+    ## Author:   Philip Leifeld (University of Glasgow)
+    ## 
+    ## Please cite the JSS article in your publications -- see citation("texreg").
+
+    ## 
+    ## Attaching package: 'texreg'
+
+    ## The following object is masked from 'package:tidyr':
+    ## 
+    ##     extract
+
+``` r
 ###################################################
 # Comparing centrality measures vs autoregression #
 ###################################################
@@ -283,18 +392,118 @@ imm$banking <- as.numeric(imm$indid == 22)
 
 lm2 <- lm(avg_div ~ degree + betweenness + eig_cent + capital + qualifications  + uncalled, data = imm)
 sts2 <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div, type = "stsls", adjmat = adjmat)
+```
+
+    ## Warning in nb2listw(res$neighbours, glist = res$weights, style = style, :
+    ## zero sum general weights
+
+    ## Warning: Function stsls moved to the spatialreg package
+
+    ## Registered S3 methods overwritten by 'spatialreg':
+    ##   method                   from 
+    ##   residuals.stsls          spdep
+    ##   deviance.stsls           spdep
+    ##   coef.stsls               spdep
+    ##   print.stsls              spdep
+    ##   summary.stsls            spdep
+    ##   print.summary.stsls      spdep
+    ##   residuals.gmsar          spdep
+    ##   deviance.gmsar           spdep
+    ##   coef.gmsar               spdep
+    ##   fitted.gmsar             spdep
+    ##   print.gmsar              spdep
+    ##   summary.gmsar            spdep
+    ##   print.summary.gmsar      spdep
+    ##   print.lagmess            spdep
+    ##   summary.lagmess          spdep
+    ##   print.summary.lagmess    spdep
+    ##   residuals.lagmess        spdep
+    ##   deviance.lagmess         spdep
+    ##   coef.lagmess             spdep
+    ##   fitted.lagmess           spdep
+    ##   logLik.lagmess           spdep
+    ##   fitted.SFResult          spdep
+    ##   print.SFResult           spdep
+    ##   fitted.ME_res            spdep
+    ##   print.ME_res             spdep
+    ##   print.lagImpact          spdep
+    ##   plot.lagImpact           spdep
+    ##   summary.lagImpact        spdep
+    ##   HPDinterval.lagImpact    spdep
+    ##   print.summary.lagImpact  spdep
+    ##   print.sarlm              spdep
+    ##   summary.sarlm            spdep
+    ##   residuals.sarlm          spdep
+    ##   deviance.sarlm           spdep
+    ##   coef.sarlm               spdep
+    ##   vcov.sarlm               spdep
+    ##   fitted.sarlm             spdep
+    ##   logLik.sarlm             spdep
+    ##   anova.sarlm              spdep
+    ##   predict.sarlm            spdep
+    ##   print.summary.sarlm      spdep
+    ##   print.sarlm.pred         spdep
+    ##   as.data.frame.sarlm.pred spdep
+    ##   residuals.spautolm       spdep
+    ##   deviance.spautolm        spdep
+    ##   coef.spautolm            spdep
+    ##   fitted.spautolm          spdep
+    ##   print.spautolm           spdep
+    ##   summary.spautolm         spdep
+    ##   logLik.spautolm          spdep
+    ##   print.summary.spautolm   spdep
+    ##   print.WXImpact           spdep
+    ##   summary.WXImpact         spdep
+    ##   print.summary.WXImpact   spdep
+    ##   predict.SLX              spdep
+
+``` r
 gsts2 <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div, type = "gstsls", adjmat = adjmat)
+```
+
+    ## Warning in nb2listw(res$neighbours, glist = res$weights, style = style, :
+    ## zero sum general weights
+
+``` r
 sacsarlm2 <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div, type = "sacsarlm", adjmat = adjmat)
+```
+
+    ## Warning in nb2listw(res$neighbours, glist = res$weights, style = style, :
+    ## zero sum general weights
+
+    ## Warning: Function sacsarlm moved to the spatialreg package
+
+``` r
 lm3 <- lm(avg_div ~ degree + betweenness + eig_cent + capital + qualifications + uncalled + railways + insurance + investment + banking, 
                data = imm[!is.na(imm$avg_div), ])
 sts3 <- run_regs(avg_div ~ capital + qualifications  + uncalled + 
                    railways + insurance + investment + banking, imm$avg_div, type = "stsls", adjmat = adjmat)
+```
+
+    ## Warning in nb2listw(res$neighbours, glist = res$weights, style = style, :
+    ## zero sum general weights
+
+    ## Warning: Function stsls moved to the spatialreg package
+
+``` r
 gsts3 <- run_regs(avg_div ~ capital + qualifications  + uncalled + 
                     railways + insurance + investment + banking, imm$avg_div, type = "gstsls", adjmat = adjmat)
+```
+
+    ## Warning in nb2listw(res$neighbours, glist = res$weights, style = style, :
+    ## zero sum general weights
+
+``` r
 sacsarlm3 <- run_regs(avg_div ~ capital + qualifications  + uncalled + 
                         railways + insurance + investment + banking, imm$avg_div, type = "sacsarlm", adjmat = adjmat)
+```
 
+    ## Warning in nb2listw(res$neighbours, glist = res$weights, style = style, :
+    ## zero sum general weights
 
+    ## Warning: Function sacsarlm moved to the spatialreg package
+
+``` r
 screenreg(list(lm2, extract.stsls(sts2), extract.gstslshet(gsts2), sacsarlm2,
             lm3, extract.stsls(sts3), extract.gstslshet(gsts3), sacsarlm3), 
        custom.model.names = c("OLS", "STSLS", "GSTSLS", "SAC/SARAR", "OLS", "STSLS", "GSTSLS", "SAC/SARAR"),
@@ -303,59 +512,56 @@ screenreg(list(lm2, extract.stsls(sts2), extract.gstslshet(gsts2), sacsarlm2,
        include.lr = F)
 ```
 
-    ## 
-    ## ==============================================================================================================
-    ##                     OLS        STSLS      GSTSLS     SAC/SARAR    OLS        STSLS      GSTSLS     SAC/SARAR  
-    ## --------------------------------------------------------------------------------------------------------------
-    ## degree               0.23                                          0.10                                       
-    ##                     (0.31)                                        (0.30)                                      
-    ## betweenness         -0.00                                          0.00                                       
-    ##                     (0.01)                                        (0.01)                                      
-    ## eigen               -0.45                                          1.49                                       
-    ##                     (5.12)                                        (4.83)                                      
-    ## rho                             0.33       0.43 ***     0.61 ***              0.40 **    0.51 ***     0.58 ***
-    ##                                (0.17)     (0.13)       (0.10)                (0.14)     (0.12)       (0.10)   
-    ## lambda                                    -0.49 **     -0.73 ***                        -0.59 **     -0.67 ***
-    ##                                           (0.18)       (0.12)                           (0.19)       (0.14)   
-    ## capital             -0.00       0.00      -0.00         0.00      -0.00       0.00       0.00         0.00    
-    ##                     (0.00)     (0.00)     (0.00)       (0.00)     (0.00)     (0.00)     (0.00)       (0.00)   
-    ## qualifications      -0.07      -0.08      -0.09        -0.08      -0.12      -0.11      -0.10        -0.16    
-    ##                     (0.15)     (0.14)     (0.07)       (0.13)     (0.15)     (0.14)     (0.09)       (0.13)   
-    ## uncalled             0.65 *     0.63 *     0.63 ***     0.62 *     0.34       0.36       0.41 *       0.28    
-    ##                     (0.28)     (0.28)     (0.15)       (0.26)     (0.32)     (0.32)     (0.18)       (0.29)   
-    ## lag.capital                                            -0.00                                         -0.00    
-    ##                                                        (0.00)                                        (0.00)   
-    ## lag.qualifications                                     -0.17                                          0.13    
-    ##                                                        (0.22)                                        (0.29)   
-    ## lag.uncalled                                            0.01                                          0.54    
-    ##                                                        (0.44)                                        (0.55)   
-    ## railways                                                          -5.60 **   -6.00 **   -6.44 ***    -6.60 ** 
-    ##                                                                   (2.06)     (2.03)     (1.21)       (2.05)   
-    ## insurance                                                          1.75       0.29      -0.66         1.78    
-    ##                                                                   (2.97)     (2.98)     (2.56)       (2.85)   
-    ## investment                                                        -0.63      -1.33      -1.61        -1.63    
-    ##                                                                   (1.35)     (1.29)     (0.93)       (1.66)   
-    ## banking                                                            6.70 **    6.76 **    4.98 ***     6.04 *  
-    ##                                                                   (2.32)     (2.24)     (1.49)       (2.45)   
-    ## lag.railways                                                                                          2.68    
-    ##                                                                                                      (3.41)   
-    ## lag.insurance                                                                                        -6.37    
-    ##                                                                                                      (6.61)   
-    ## lag.investment                                                                                        0.35    
-    ##                                                                                                      (2.35)   
-    ## lag.banking                                                                                          -6.31    
-    ##                                                                                                      (3.71)   
-    ## (Intercept)          5.56 ***   4.45 ***   3.92 ***     3.81 ***   6.13 ***   4.63 ***   4.26 ***     4.14 ***
-    ##                     (0.93)     (1.20)     (1.02)       (0.85)     (0.88)     (1.02)     (0.83)       (0.82)   
-    ## --------------------------------------------------------------------------------------------------------------
-    ## R^2                  0.10       0.10       0.07                    0.31       0.32       0.29                 
-    ## Num. obs.           95         95.00      95.00        95         95         95.00      95.00        95       
-    ## Parameters                                             10                                            18       
-    ## Log Likelihood                                       -284.64                                       -270.81    
-    ## ==============================================================================================================
-    ## *** p < 0.001, ** p < 0.01, * p < 0.05
-
-### Reproducing Table 3: Regressions with Mis-Measured Networks
+==============================================================================================================
+OLS STSLS GSTSLS SAC/SARAR OLS STSLS GSTSLS SAC/SARAR  
+————————————————————————————————————– degree 0.23 0.10  
+(0.31) (0.30)  
+betweenness -0.00 0.00  
+(0.01) (0.01)  
+eigen -0.45 1.49  
+(5.12) (4.83)  
+rho 0.33 0.43 \*\*\* 0.61 \*\*\* 0.40 \*\* 0.51 \*\*\* 0.58 *** (0.17)
+(0.13) (0.10) (0.14) (0.12) (0.10)  
+lambda -0.49 ** -0.73 *\*\* -0.59 \*\* -0.67 *** (0.18) (0.12) (0.19)
+(0.14)  
+capital -0.00 0.00 -0.00 0.00 -0.00 0.00 0.00 0.00  
+(0.00) (0.00) (0.00) (0.00) (0.00) (0.00) (0.00) (0.00)  
+qualifications -0.07 -0.08 -0.09 -0.08 -0.12 -0.11 -0.10 -0.16  
+(0.15) (0.14) (0.07) (0.13) (0.15) (0.14) (0.09) (0.13)  
+uncalled 0.65 * 0.63 \* 0.63 **\* 0.62 \* 0.34 0.36 0.41 \* 0.28  
+(0.28) (0.28) (0.15) (0.26) (0.32) (0.32) (0.18) (0.29)  
+lag.capital -0.00 -0.00  
+(0.00) (0.00)  
+lag.qualifications -0.17 0.13  
+(0.22) (0.29)  
+lag.uncalled 0.01 0.54  
+(0.44) (0.55)  
+railways -5.60 \*\* -6.00 \*\* -6.44 \*\*\* -6.60 \*\* (2.06) (2.03)
+(1.21) (2.05)  
+insurance 1.75 0.29 -0.66 1.78  
+(2.97) (2.98) (2.56) (2.85)  
+investment -0.63 -1.33 -1.61 -1.63  
+(1.35) (1.29) (0.93) (1.66)  
+banking 6.70 \*\* 6.76 \*\* 4.98 \*\*\* 6.04 \*  
+(2.32) (2.24) (1.49) (2.45)  
+lag.railways 2.68  
+(3.41)  
+lag.insurance -6.37  
+(6.61)  
+lag.investment 0.35  
+(2.35)  
+lag.banking -6.31  
+(3.71)  
+(Intercept) 5.56 \*\*\* 4.45 \*\*\* 3.92 \*\*\* 3.81 \*\*\* 6.13 \*\*\*
+4.63 \*\*\* 4.26 \*\*\* 4.14 *** (0.93) (1.20) (1.02) (0.85) (0.88)
+(1.02) (0.83) (0.82)  
+————————————————————————————————————– R^2 0.10 0.10 0.07 0.31 0.32
+0.29  
+Num. obs. 95 95.00 95.00 95 95 95.00 95.00 95  
+Parameters 10 18  
+Log Likelihood -284.64 -270.81  
+==============================================================================================================
+*** p &lt; 0.001, \*\* p &lt; 0.01, \* p &lt; 0.05
 
 Finally, we reproduce the results of Table 3 by creating a mis-measured
 network which fails to encode connections between companies and banks
@@ -384,9 +590,30 @@ imm$betweenness_nb <- betweenness(cg2)
 # Make wide table
 lm2_nb <- lm(avg_div ~ degree_nb + betweenness_nb + eig_cent_nb + capital + qualifications  + uncalled, data = imm)
 sts2_nb <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div, type = "stsls", adjmat = adjmat_nb)
-gsts2_nb <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div, type = "gstsls", adjmat = adjmat_nb)
-sacsarlm2_nb <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div, type = "sacsarlm", adjmat = adjmat_nb)
+```
 
+    ## Warning in nb2listw(res$neighbours, glist = res$weights, style = style, :
+    ## zero sum general weights
+
+    ## Warning: Function stsls moved to the spatialreg package
+
+``` r
+gsts2_nb <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div, type = "gstsls", adjmat = adjmat_nb)
+```
+
+    ## Warning in nb2listw(res$neighbours, glist = res$weights, style = style, :
+    ## zero sum general weights
+
+``` r
+sacsarlm2_nb <- run_regs(avg_div ~ capital + qualifications  + uncalled, imm$avg_div, type = "sacsarlm", adjmat = adjmat_nb)
+```
+
+    ## Warning in nb2listw(res$neighbours, glist = res$weights, style = style, :
+    ## zero sum general weights
+
+    ## Warning: Function sacsarlm moved to the spatialreg package
+
+``` r
 screenreg(list(lm2_nb, extract.stsls(sts2_nb), extract.gstslshet(gsts2_nb), sacsarlm2_nb), 
        custom.model.names = c("OLS", "STSLS", "GSTSLS", "SAC/SARAR"),
        custom.coef.names = c(rep(NA, 7), "rho", rep(NA, 5)),
@@ -394,38 +621,35 @@ screenreg(list(lm2_nb, extract.stsls(sts2_nb), extract.gstslshet(gsts2_nb), sacs
        include.lr = F)
 ```
 
-    ## 
-    ## ================================================================
-    ##                     OLS        STSLS      GSTSLS     SAC/SARAR  
-    ## ----------------------------------------------------------------
-    ## degree_nb           -0.32                                       
-    ##                     (0.32)                                      
-    ## betweenness_nb      -0.00                                       
-    ##                     (0.01)                                      
-    ## eig_cent_nb          5.24                                       
-    ##                     (4.74)                                      
-    ## rho                            -0.06      -0.09         0.22    
-    ##                                (0.18)     (0.17)       (0.19)   
-    ## lambda                                     0.15        -0.25    
-    ##                                           (0.19)       (0.25)   
-    ## capital              0.00       0.00       0.00         0.00    
-    ##                     (0.00)     (0.00)     (0.00)       (0.00)   
-    ## qualifications      -0.01      -0.04      -0.03        -0.06    
-    ##                     (0.15)     (0.14)     (0.07)       (0.14)   
-    ## uncalled             0.64 *     0.66 *     0.63 ***     0.68 *  
-    ##                     (0.28)     (0.28)     (0.14)       (0.27)   
-    ## lag.capital                                            -0.00    
-    ##                                                        (0.00)   
-    ## lag.qualifications                                     -0.23    
-    ##                                                        (0.25)   
-    ## lag.uncalled                                            0.27    
-    ##                                                        (0.48)   
-    ## (Intercept)          6.76 ***   6.61 ***   6.77 ***     6.06 ***
-    ##                     (0.89)     (1.11)     (1.15)       (1.05)   
-    ## ----------------------------------------------------------------
-    ## R^2                  0.10       0.09       0.08                 
-    ## Num. obs.           95         95.00      95.00        95       
-    ## Parameters                                             10       
-    ## Log Likelihood                                       -290.36    
-    ## ================================================================
-    ## *** p < 0.001, ** p < 0.01, * p < 0.05
+================================================================ OLS
+STSLS GSTSLS SAC/SARAR  
+—————————————————————- degree\_nb -0.32  
+(0.32)  
+betweenness\_nb -0.00  
+(0.01)  
+eig\_cent\_nb 5.24  
+(4.74)  
+rho -0.06 -0.09 0.22  
+(0.18) (0.17) (0.19)  
+lambda 0.15 -0.25  
+(0.19) (0.25)  
+capital 0.00 0.00 0.00 0.00  
+(0.00) (0.00) (0.00) (0.00)  
+qualifications -0.01 -0.04 -0.03 -0.06  
+(0.15) (0.14) (0.07) (0.14)  
+uncalled 0.64 \* 0.66 \* 0.63 \*\*\* 0.68 \*  
+(0.28) (0.28) (0.14) (0.27)  
+lag.capital -0.00  
+(0.00)  
+lag.qualifications -0.23  
+(0.25)  
+lag.uncalled 0.27  
+(0.48)  
+(Intercept) 6.76 \*\*\* 6.61 \*\*\* 6.77 \*\*\* 6.06 *** (0.89) (1.11)
+(1.15) (1.05)  
+—————————————————————- R^2 0.10 0.09 0.08  
+Num. obs. 95 95.00 95.00 95  
+Parameters 10  
+Log Likelihood -290.36  
+================================================================ *** p
+&lt; 0.001, \*\* p &lt; 0.01, \* p &lt; 0.05
